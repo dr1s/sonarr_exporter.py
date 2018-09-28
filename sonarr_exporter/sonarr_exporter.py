@@ -36,7 +36,6 @@ class sonarr_exporter:
         self.api_key = api_key
         self.metrics_data = dict()
         self.metrics = dict()
-        self.get_data()
 
     def get_from_api(self, url, data={}):
         headers = {'X-Api-Key': self.api_key}
@@ -57,6 +56,7 @@ class sonarr_exporter:
         self.metrics_data['coming_episodes'] = len(res.json())
 
     def generate_latest(self):
+        self.get_data()
         for metric in self.metrics_data:
             if not metric in self.metrics:
                 self.metrics[metric] = Gauge('sonarr_%s' % metric.lower(),
@@ -96,7 +96,7 @@ class sonarr_exporter:
 def main():
     parser = argparse.ArgumentParser(description='sonarr_exporter')
     parser.add_argument(
-        '-s', '--sonarr', help='sonarr address', default='localhost:8989')
+        '-s', '--sonarr', help='sonarr address', default='http://localhost:8989')
     parser.add_argument(
         '-p',
         '--port',

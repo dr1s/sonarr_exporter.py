@@ -75,7 +75,7 @@ A prometheus exporter for sonarr written in Python 3.
 
 ## Usage Example
 
-    sonarr_exporter --sonarr localhost:8989 --interface 0.0.0.0 --port 9314 --api-key <api_key>
+    sonarr_exporter --sonarr http://localhost:8989 --interface 0.0.0.0 --port 9314 --api-key <api_key>
 
 The previous used arguements are the default options. If nothing needs to be changed, sonarr_exporter can be started without arguments.
 
