@@ -55,7 +55,7 @@ A prometheus exporter for sonarr written in Python 3.
 ### manual
     git clone https://github.com/dr1s/sonarr_exporter.py.git
     docker build -t dr1s/sonarr_exporter .
-    docker run -d --net=host -t dr1s/sonarr_exporter
+    docker run -d -p 9314:9314 -t dr1s/sonarr_exporter
 
 # Usage
     usage: sonarr_exporter.py [-h] [-s SONARR] [-p PORT] [-i INTERFACE]

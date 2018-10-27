@@ -1,18 +1,17 @@
 FROM alpine:3.8
-MAINTAINER dr1s
 
 RUN apk add --no-cache python3 && \
     pip3 install --upgrade pip setuptools && \
-    pip3 install virtualenv
+    pip3 install pipenv
 
-WORKDIR /sonarr_exporter
+WORKDIR /exporter
 
-COPY . /sonarr_exporter
+COPY sonarr_exporter/sonarr_exporter.py sonarr_exporter.py
+COPY Pipfile Pipfile
+COPY Pipfile.lock Pipfile.lock
 
-RUN virtualenv -p python3 /env && \
-    /env/bin/python3 setup.py install && \
-    rm -rf /sonarr_exporter
+RUN set -ex && pipenv install --deploy --system
 
 EXPOSE 9314
 
-ENTRYPOINT ["/env/bin/sonarr_exporter"]
+ENTRYPOINT python3 sonarr_exporter.py
