@@ -1,4 +1,4 @@
-FROM dr1s/pipenv-alpine:3.8-python3.6
+FROM dr1s/pipenv-alpine:3.8-python3.7
 
 COPY sonarr_exporter/sonarr_exporter.py sonarr_exporter.py
 
