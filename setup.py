@@ -18,6 +18,6 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts':
-        ['sonarr_exporter=sonarr_exporter.sonarr_exporter:main']
+        ['sonarr_exporter=sonarr_exporter:main']
     },
 )

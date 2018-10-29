@@ -14,58 +14,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__VERSION__ = '0.1.dev0'
-
 import argparse
 import requests
 import threading
 
-from prometheus_client import Gauge, generate_latest
-from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
+from prometheus_metrics import exporter, generate_latest
 
 
-class sonarr_exporter:
-    class _SilentHandler(WSGIRequestHandler):
-        """WSGI handler that does not log requests."""
-
-        def log_message(self, format, *args):
-            """Log nothing."""
-
+class sonarr_exporter(exporter):
     def __init__(self, url, api_key):
+        super().__init__()
         self.url = url + '/api'
         self.api_key = api_key
-        self.metrics_data = dict()
-        self.metrics = dict()
+        self.metrics_handler.add_metric('sonarr_series')
+        self.metrics_handler.add_metric('sonarr_wanted_missing')
+        self.metrics_handler.add_metric('sonarr_queue')
+        #self.metrics_handler.add_metric('sonarr_coming_episodes')
 
     def get_from_api(self, url, data={}):
         headers = {'X-Api-Key': self.api_key}
         res = requests.get(url, headers=headers, json=data)
         return res
 
-    def get_data(self):
-        res = self.get_from_api('%s/series' % self.url)
-        self.metrics_data['series'] = len(res.json())
-
-        res = self.get_from_api('%s/wanted/missing/' % self.url)
-        self.metrics_data['wanted_missing'] = len(res.json())
-
-        res = self.get_from_api('%s/queue' % self.url)
-        self.metrics_data['queue'] = len(res.json())
-
-        res = self.get_from_api('%s/calendar' % self.url)
-        self.metrics_data['coming_episodes'] = len(res.json())
+    def add_update_metric(self, name):
+        res = self.get_from_api('%s/%s' % (self.url, name))
+        print(res)
+        value = len(res.json())
+        print(value)
+        self.metrics_handler.update_metric('sonarr_%s' % name.replace('/', '_'), value)
 
     def generate_latest(self):
-        self.get_data()
-        for metric in self.metrics_data:
-            if not metric in self.metrics:
-                self.metrics[metric] = Gauge('sonarr_%s' % metric.lower(),
-                                             metric.replace('_', ' '))
-            self.metrics[metric].set(self.metrics_data[metric])
-
+        self.add_update_metric('series')
+        self.add_update_metric('wanted/missing')
+        self.add_update_metric('queue')
+        #self.add_update_metric('coming_episodes')
         return generate_latest()
 
-    def make_prometheus_app(self):
+    def make_wsgi_app(self):
         def prometheus_app(environ, start_response):
             output = self.generate_latest()
             status = str('200 OK')
@@ -75,28 +60,13 @@ class sonarr_exporter:
 
         return prometheus_app
 
-    def make_server(self, interface, port):
-        server_class = WSGIServer
-
-        if ':' in interface:
-            if getattr(server_class, 'address_family') == socket.AF_INET:
-                server_class.address_family = socket.AF_INET6
-
-        print("* Listening on %s:%s" % (interface, port))
-        self.httpd = make_server(
-            interface,
-            port,
-            self.make_prometheus_app(),
-            server_class=server_class,
-            handler_class=self._SilentHandler)
-        t = threading.Thread(target=self.httpd.serve_forever)
-        t.start()
-
-
 def main():
     parser = argparse.ArgumentParser(description='sonarr_exporter')
     parser.add_argument(
-        '-s', '--sonarr', help='sonarr address', default='http://localhost:8989')
+        '-s',
+        '--sonarr',
+        help='sonarr address',
+        default='http://localhost:8989')
     parser.add_argument(
         '-p',
         '--port',

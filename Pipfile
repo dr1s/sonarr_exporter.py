@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 requests = "*"
-prometheus_client = "*"
+prometheus_metrics = "*"
 
 [dev-packages]
 
